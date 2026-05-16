@@ -11,7 +11,7 @@ exports.createReport = async (req, res) => {
       vesselId,
       title,
       inspectionDate,
-      description,
+      description, 
       attachments,
       createdBy: req.user.id
     });
