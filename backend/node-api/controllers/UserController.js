@@ -1,4 +1,4 @@
-const { User } = require('../models');
+const { User, Company } = require('../models');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
@@ -53,18 +53,47 @@ exports.loginUser = async (req, res) => {
   try {
     const user = await User.findOne({ where: { email: trimmedEmail } });
 
-    if (user && (await user.matchPassword(password))) {
-      res.json({
+    if (!user) {
+      return res.status(401).json({
+        message: 'Invalid User'
+      });
+    }
+
+    const isMatch = await user.matchPassword(password);
+    if (!isMatch) {
+      return res.status(401).json({
+        message: 'Invalid email or password'
+      });
+    }
+
+    // Superadmin Check
+    if (user.role === 'superadmin' || user.role === 'SUPERADMIN') {
+      return res.json({
         user: {
           id: user.id,
           name: user.name,
           email: user.email,
-          role: user.role
+          role: user.role,
+          companyId: user.companyId
         },
-        token: generateToken(user.id)
+        token: generateToken(user.id),
+        redirect: '/superadmin/dashboard'
       });
-    } else {
-      res.status(401).json({ message: 'Invalid email or password' });
+    }
+
+    // Normal User Logic
+    if (user.role !== 'superadmin' && user.role !== 'SUPERADMIN') {
+      return res.json({
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          companyId: user.companyId
+        },
+        token: generateToken(user.id),
+        redirect: '/dashboard'
+      });
     }
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -80,6 +109,18 @@ exports.getUsers = async (req, res) => {
       attributes: { exclude: ['password'] }
     });
     res.json(users);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Get all companies (Superadmin only)
+// @route   GET /api/users/superadmin/companies
+// @access  Private/Superadmin
+exports.getCompanies = async (req, res) => {
+  try {
+    const companies = await Company.findAll();
+    res.json(companies);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

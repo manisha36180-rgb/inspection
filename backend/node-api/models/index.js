@@ -1,6 +1,19 @@
 const User = require('./User');
 const Vessel = require('./Vessel');
 const Report = require('./Report');
+const Company = require('./Company');
+
+// User - Company
+Company.hasMany(User, { foreignKey: 'companyId', as: 'users' });
+User.belongsTo(Company, { foreignKey: 'companyId', as: 'company' });
+
+// Vessel - Company
+Company.hasMany(Vessel, { foreignKey: 'companyId', as: 'vessels' });
+Vessel.belongsTo(Company, { foreignKey: 'companyId', as: 'company' });
+
+// Report - Company
+Company.hasMany(Report, { foreignKey: 'companyId', as: 'reports' });
+Report.belongsTo(Company, { foreignKey: 'companyId', as: 'company' });
 
 // User - Vessel (Created By)
 User.hasMany(Vessel, { foreignKey: 'createdBy', as: 'vessels' });
@@ -21,5 +34,6 @@ Report.belongsTo(User, { foreignKey: 'approvedBy', as: 'approver' });
 module.exports = {
   User,
   Vessel,
-  Report
+  Report,
+  Company
 };
